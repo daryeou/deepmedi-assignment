@@ -164,7 +164,7 @@ internal fun DeepmediHomeScreen(
                 },
                 showCheckSymbol = showCheckSymbol,
             )
-            Spacer(modifier = Modifier.weight(0.2f))
+            Spacer(modifier = Modifier.weight(0.4f))
             Image(
                 modifier = Modifier
                     .padding(horizontal = 20.dp)
