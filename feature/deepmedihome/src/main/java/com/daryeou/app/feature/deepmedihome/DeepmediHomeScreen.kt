@@ -65,11 +65,12 @@ internal fun DeepmediHomeScreen(
     }
 
     var homeDescription by remember { mutableStateOf(buildAnnotatedString {}) }
-    var enableCapture by remember { mutableStateOf(true) }
+    var isApiCallIdle by remember { mutableStateOf(true) }
     var showCheckSymbol by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = uiState) {
         showCheckSymbol = false
+        isApiCallIdle = false
 
         when (uiState) {
             is DeepmediHomeState.Idle -> {
@@ -80,14 +81,13 @@ internal fun DeepmediHomeScreen(
                     }
                     append(context.getString(R.string.deepmedi_home_description_end))
                 }
-                enableCapture = true
+                isApiCallIdle = true
             }
 
             is DeepmediHomeState.Loading -> {
                 homeDescription = buildAnnotatedString {
                     append(context.getString(R.string.deepmedi_home_description_loading))
                 }
-                enableCapture = false
             }
 
             is DeepmediHomeState.Success -> {
@@ -109,7 +109,7 @@ internal fun DeepmediHomeScreen(
                         append(context.getString(R.string.deepmedi_home_description_result_failed))
                     }
                 }
-                enableCapture = true
+                isApiCallIdle = true
             }
         }
     }
@@ -157,7 +157,7 @@ internal fun DeepmediHomeScreen(
                     .fillMaxWidth(0.8f),
                 lensFacing = lensFacing,
                 imageCapture = imageCapture,
-                enableCapture = enableCapture,
+                isApiCallIdle = isApiCallIdle,
                 onImageCaptured = onImageCaptured,
                 onCaptureFailed = {
                     showMessage(context.getString(R.string.capture_failed_message))
@@ -167,8 +167,8 @@ internal fun DeepmediHomeScreen(
             Spacer(modifier = Modifier.weight(0.2f))
             Image(
                 modifier = Modifier
-                    .padding(horizontal = 24.dp)
-                    .weight(0.2f)
+                    .padding(horizontal = 20.dp)
+                    .fillMaxWidth()
                     .wrapContentHeight(),
                 painter = painterResource(R.drawable.img_home_bottom),
                 contentDescription = "Home Bottom Image",
@@ -181,7 +181,7 @@ internal fun DeepmediHomeScreen(
 @Composable
 private fun DeepmediHomePreviewSection(
     modifier: Modifier = Modifier,
-    enableCapture: Boolean,
+    isApiCallIdle: Boolean,
     imageCapture: ImageCapture,
     lensFacing: Int,
     showCheckSymbol: Boolean,
@@ -189,6 +189,13 @@ private fun DeepmediHomePreviewSection(
     onCaptureFailed: (ImageCaptureException) -> Unit,
 ) {
     val context = LocalContext.current
+    var enableCaptureButton by remember { mutableStateOf(true) }
+
+    LaunchedEffect(isApiCallIdle) {
+        if (!enableCaptureButton && isApiCallIdle) {
+            enableCaptureButton = true
+        }
+    }
 
     Column(
         modifier = modifier,
@@ -206,7 +213,7 @@ private fun DeepmediHomePreviewSection(
             CameraPreview(
                 modifier = Modifier
                     .fillMaxSize(),
-                cameraBind = enableCapture,
+                cameraBind = isApiCallIdle,
                 imageCapture = imageCapture,
                 lensFacing = lensFacing,
             )
@@ -229,15 +236,16 @@ private fun DeepmediHomePreviewSection(
                 .width(120.dp)
                 .wrapContentHeight(),
             onClick = {
+                enableCaptureButton = false
                 takePhoto(
                     context = context,
                     imageCapture = imageCapture,
                     lensFacing = lensFacing,
                     onImageCaptured = onImageCaptured,
-                    onCaptureFailed = onCaptureFailed
+                    onCaptureFailed = onCaptureFailed,
                 )
             },
-            isEnable = enableCapture,
+            isEnable = enableCaptureButton,
         )
     }
 }
