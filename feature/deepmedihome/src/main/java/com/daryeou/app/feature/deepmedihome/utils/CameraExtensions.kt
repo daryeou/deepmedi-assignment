@@ -13,8 +13,7 @@ import java.util.Locale
 private const val FILENAME = "yyyy-MM-dd-HH-mm-ss-SSS"
 private const val PHOTO_EXTENSION = ".jpg"
 
-
-fun takePhoto(
+internal fun takePhoto(
     context: Context,
     imageCapture: ImageCapture,
     lensFacing: Int,
@@ -48,7 +47,7 @@ fun takePhoto(
 }
 
 
-fun getOutputFileOptions(
+private fun getOutputFileOptions(
     lensFacing: Int,
     photoFile: File
 ): ImageCapture.OutputFileOptions {
@@ -66,13 +65,13 @@ fun getOutputFileOptions(
     return outputOptions
 }
 
-fun createFile(baseFolder: File, format: String, extension: String) =
+private fun createFile(baseFolder: File, format: String, extension: String) =
     File(
         baseFolder, SimpleDateFormat(format, Locale.US)
             .format(System.currentTimeMillis()) + extension
     )
 
 
-fun Context.getOutputDirectory(): File {
+private fun Context.getOutputDirectory(): File {
     return cacheDir
 }

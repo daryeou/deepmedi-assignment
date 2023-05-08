@@ -3,15 +3,20 @@ package com.daryeou.app.feature.deepmedihome
 import android.net.Uri
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCaptureException
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.Button
@@ -26,12 +31,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -52,20 +59,23 @@ internal fun DeepmediHomeScreen(
     showMessage: (String) -> Unit,
 ) {
     val context = LocalContext.current
-    val lensFacing by remember { mutableStateOf(CameraSelector.LENS_FACING_BACK) }
+    val lensFacing by remember { mutableStateOf(CameraSelector.LENS_FACING_FRONT) }
     val imageCapture: ImageCapture = remember {
         ImageCapture.Builder().build()
     }
 
     var homeDescription by remember { mutableStateOf(buildAnnotatedString {}) }
     var enableCapture by remember { mutableStateOf(true) }
+    var showCheckSymbol by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = uiState) {
+        showCheckSymbol = false
+
         when (uiState) {
             is DeepmediHomeState.Idle -> {
                 homeDescription = buildAnnotatedString {
                     append(context.getString(R.string.deepmedi_home_description_start))
-                    withStyle(style = SpanStyle(color = Colors.text_red)) {
+                    withStyle(style = SpanStyle(color = Colors.red_primary)) {
                         append(context.getString(R.string.deepmedi_home_description_highlight))
                     }
                     append(context.getString(R.string.deepmedi_home_description_end))
@@ -83,10 +93,11 @@ internal fun DeepmediHomeScreen(
             is DeepmediHomeState.Success -> {
                 homeDescription = buildAnnotatedString {
                     append(context.getString(R.string.deepmedi_home_description_result))
-                    withStyle(SpanStyle(color = Colors.text_red)) {
+                    withStyle(SpanStyle(color = Colors.red_primary)) {
                         append(context.getString(R.string.deepmedi_home_description_result_success))
                     }
                 }
+                showCheckSymbol = true
                 delay(navigateToResultDelay)
                 onNavigateToResult()
             }
@@ -94,7 +105,7 @@ internal fun DeepmediHomeScreen(
             is DeepmediHomeState.Error -> {
                 homeDescription = buildAnnotatedString {
                     append(context.getString(R.string.deepmedi_home_description_result))
-                    withStyle(SpanStyle(color = Colors.text_red)) {
+                    withStyle(SpanStyle(color = Colors.red_primary)) {
                         append(context.getString(R.string.deepmedi_home_description_result_failed))
                     }
                 }
@@ -124,69 +135,121 @@ internal fun DeepmediHomeScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
+            verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Spacer(modifier = Modifier.height(50.dp))
+            Spacer(modifier = Modifier.weight(0.1f))
             Text(
                 modifier = Modifier
-                    .weight(0.7f),
+                    .wrapContentHeight(),
                 text = homeDescription,
                 fontSize = 16.sp,
                 fontWeight = FontWeight(700),
                 lineHeight = 26.sp,
+                textAlign = TextAlign.Center,
+                minLines = 2,
+                maxLines = 2,
             )
-            Spacer(modifier = Modifier.height(60.dp))
+            Spacer(modifier = Modifier.weight(0.1f))
+            DeepmediHomePreviewSection(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(0.8f),
+                lensFacing = lensFacing,
+                imageCapture = imageCapture,
+                enableCapture = enableCapture,
+                onImageCaptured = onImageCaptured,
+                onCaptureFailed = {
+                    showMessage(context.getString(R.string.capture_failed_message))
+                },
+                showCheckSymbol = showCheckSymbol,
+            )
+            Spacer(modifier = Modifier.weight(0.2f))
+            Image(
+                modifier = Modifier
+                    .padding(horizontal = 24.dp)
+                    .weight(0.2f)
+                    .wrapContentHeight(),
+                painter = painterResource(R.drawable.img_home_bottom),
+                contentDescription = "Home Bottom Image",
+            )
+            Spacer(modifier = Modifier.height(20.dp))
+        }
+    }
+}
+
+@Composable
+private fun DeepmediHomePreviewSection(
+    modifier: Modifier = Modifier,
+    enableCapture: Boolean,
+    imageCapture: ImageCapture,
+    lensFacing: Int,
+    showCheckSymbol: Boolean,
+    onImageCaptured: (Uri) -> Unit,
+    onCaptureFailed: (ImageCaptureException) -> Unit,
+) {
+    val context = LocalContext.current
+
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .aspectRatio(1f)
+                .border(
+                    width = 3.dp,
+                    color = Colors.red_primary,
+                ),
+        ) {
             CameraPreview(
                 modifier = Modifier
-                    .fillMaxWidth(0.8f)
-                    .aspectRatio(1f)
-                    .wrapContentHeight(),
+                    .fillMaxSize(),
                 cameraBind = enableCapture,
                 imageCapture = imageCapture,
                 lensFacing = lensFacing,
             )
             Spacer(modifier = Modifier.height(24.dp))
-            CaptureButton(
-                onClick = {
-                    takePhoto(
-                        context = context,
-                        imageCapture = imageCapture,
-                        lensFacing = lensFacing,
-                        onImageCaptured = { uri ->
-                            onImageCaptured(uri)
-                        },
-                        onCaptureFailed = {
-                            showMessage(context.getString(R.string.capture_failed_message))
-                        }
-                    )
-                },
-                isEnable = enableCapture,
-            )
-            Spacer(
-                modifier = Modifier
-                    .weight(1f)
-                    .heightIn(min = 24.dp)
-            )
+            if (showCheckSymbol) {
+                Image(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0x2600FF80))
+                        .fillMaxWidth(0.3f)
+                        .wrapContentHeight()
+                        .align(Alignment.Center),
+                    painter = painterResource(id = R.drawable.ic_check),
+                    contentDescription = null,
+                )
+            }
         }
-        Image(
+        CaptureButton(
             modifier = Modifier
-                .padding(horizontal = 20.dp)
-                .fillMaxWidth(),
-            painter = painterResource(R.drawable.img_home_bottom),
-            contentDescription = "Home Bottom Image",
+                .width(120.dp)
+                .wrapContentHeight(),
+            onClick = {
+                takePhoto(
+                    context = context,
+                    imageCapture = imageCapture,
+                    lensFacing = lensFacing,
+                    onImageCaptured = onImageCaptured,
+                    onCaptureFailed = onCaptureFailed
+                )
+            },
+            isEnable = enableCapture,
         )
-        Spacer(modifier = Modifier.height(40.dp))
     }
 }
 
 @Composable
 private fun CaptureButton(
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
     isEnable: Boolean,
 ) {
     Button(
-        modifier = Modifier
-            .fillMaxWidth(0.8f),
+        modifier = modifier,
         onClick = onClick,
         enabled = isEnable,
     ) {

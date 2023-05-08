@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="deepmedi_home_title">홈</string>
-    <string name="deepmedi_home_description_start">얼굴 인식을 위해\n</string>
-    <string name="deepmedi_home_description_highlight">화면을 응시</string>
+    <string name="deepmedi_home_description_start">얼굴 인식을 위해</string>
+    <string name="deepmedi_home_description_highlight">\n화면을 응시</string>
     <string name="deepmedi_home_description_end">해 주세요.</string>
     <string name="deepmedi_home_description_loading">잠시만 기다려주세요.</string>
     <string name="deepmedi_home_description_result">얼굴 인식</string>

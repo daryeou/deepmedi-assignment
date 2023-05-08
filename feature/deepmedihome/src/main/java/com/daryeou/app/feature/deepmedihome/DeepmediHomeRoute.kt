@@ -42,8 +42,6 @@ internal fun DeepmediHomeRoute(
         permissionStates.launchMultiplePermissionRequest()
     }
 
-
-
     if (isPermissionGranted.not()) {
         PermissionDeniedScreen(onExit)
     }
