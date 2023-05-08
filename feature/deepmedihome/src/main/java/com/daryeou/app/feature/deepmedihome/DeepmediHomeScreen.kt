@@ -65,12 +65,11 @@ internal fun DeepmediHomeScreen(
     }
 
     var homeDescription by remember { mutableStateOf(buildAnnotatedString {}) }
-    var isApiCallIdle by remember { mutableStateOf(true) }
+    var enableCapture by remember { mutableStateOf(true) }
     var showCheckSymbol by remember { mutableStateOf(false) }
 
     LaunchedEffect(key1 = uiState) {
         showCheckSymbol = false
-        isApiCallIdle = false
 
         when (uiState) {
             is DeepmediHomeState.Idle -> {
@@ -81,13 +80,14 @@ internal fun DeepmediHomeScreen(
                     }
                     append(context.getString(R.string.deepmedi_home_description_end))
                 }
-                isApiCallIdle = true
+                enableCapture = true
             }
 
             is DeepmediHomeState.Loading -> {
                 homeDescription = buildAnnotatedString {
                     append(context.getString(R.string.deepmedi_home_description_loading))
                 }
+                enableCapture = false
             }
 
             is DeepmediHomeState.Success -> {
@@ -109,7 +109,7 @@ internal fun DeepmediHomeScreen(
                         append(context.getString(R.string.deepmedi_home_description_result_failed))
                     }
                 }
-                isApiCallIdle = true
+                enableCapture = true
             }
         }
     }
@@ -157,7 +157,7 @@ internal fun DeepmediHomeScreen(
                     .fillMaxWidth(0.8f),
                 lensFacing = lensFacing,
                 imageCapture = imageCapture,
-                isApiCallIdle = isApiCallIdle,
+                enableCapture = enableCapture,
                 onImageCaptured = onImageCaptured,
                 onCaptureFailed = {
                     showMessage(context.getString(R.string.capture_failed_message))
@@ -181,7 +181,7 @@ internal fun DeepmediHomeScreen(
 @Composable
 private fun DeepmediHomePreviewSection(
     modifier: Modifier = Modifier,
-    isApiCallIdle: Boolean,
+    enableCapture: Boolean,
     imageCapture: ImageCapture,
     lensFacing: Int,
     showCheckSymbol: Boolean,
@@ -189,13 +189,6 @@ private fun DeepmediHomePreviewSection(
     onCaptureFailed: (ImageCaptureException) -> Unit,
 ) {
     val context = LocalContext.current
-    var enableCaptureButton by remember { mutableStateOf(true) }
-
-    LaunchedEffect(isApiCallIdle) {
-        if (!enableCaptureButton && isApiCallIdle) {
-            enableCaptureButton = true
-        }
-    }
 
     Column(
         modifier = modifier,
@@ -213,7 +206,7 @@ private fun DeepmediHomePreviewSection(
             CameraPreview(
                 modifier = Modifier
                     .fillMaxSize(),
-                cameraBind = isApiCallIdle,
+                cameraBind = enableCapture,
                 imageCapture = imageCapture,
                 lensFacing = lensFacing,
             )
@@ -236,7 +229,6 @@ private fun DeepmediHomePreviewSection(
                 .width(120.dp)
                 .wrapContentHeight(),
             onClick = {
-                enableCaptureButton = false
                 takePhoto(
                     context = context,
                     imageCapture = imageCapture,
@@ -245,7 +237,7 @@ private fun DeepmediHomePreviewSection(
                     onCaptureFailed = onCaptureFailed,
                 )
             },
-            isEnable = enableCaptureButton,
+            isEnable = enableCapture,
         )
     }
 }
