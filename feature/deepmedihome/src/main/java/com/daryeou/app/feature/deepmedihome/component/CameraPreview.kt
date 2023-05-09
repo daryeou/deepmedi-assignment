@@ -23,17 +23,11 @@ import kotlin.coroutines.suspendCoroutine
 @Composable
 fun CameraPreview(
     modifier: Modifier = Modifier,
-    cameraBind: Boolean = true,
     imageCapture: ImageCapture,
-    lensFacing: Int = CameraSelector.LENS_FACING_BACK
+    lensFacing: Int = CameraSelector.LENS_FACING_BACK,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-
-    val preview = Preview.Builder().build()
-    val cameraSelector = CameraSelector.Builder()
-        .requireLensFacing(lensFacing)
-        .build()
 
     val previewView = remember {
         PreviewView(context).apply {
@@ -41,19 +35,22 @@ fun CameraPreview(
         }
     }
 
-    LaunchedEffect(key1 = cameraBind) {
+    val preview = Preview.Builder().build()
+    val cameraSelector = CameraSelector.Builder()
+        .requireLensFacing(lensFacing)
+        .build()
+
+    LaunchedEffect(Unit) {
         val cameraProvider = context.getCameraProvider()
 
         cameraProvider.unbindAll()
-        if (cameraBind) {
-            cameraProvider.bindToLifecycle(
-                lifecycleOwner,
-                cameraSelector,
-                preview,
-                imageCapture
-            )
-            preview.setSurfaceProvider(previewView.surfaceProvider)
-        }
+        cameraProvider.bindToLifecycle(
+            lifecycleOwner,
+            cameraSelector,
+            preview,
+            imageCapture
+        )
+        preview.setSurfaceProvider(previewView.surfaceProvider)
     }
 
     Box(
@@ -68,7 +65,7 @@ fun CameraPreview(
     }
 }
 
-suspend fun Context.getCameraProvider(): ProcessCameraProvider {
+private suspend fun Context.getCameraProvider(): ProcessCameraProvider {
     return suspendCoroutine { continuation ->
         ProcessCameraProvider.getInstance(this@getCameraProvider).also { cameraProvider ->
             cameraProvider.addListener({

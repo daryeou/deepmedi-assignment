@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -43,6 +44,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.rememberAsyncImagePainter
 import com.daryeou.app.core.designsystem.theme.AppTheme
 import com.daryeou.app.core.designsystem.theme.Colors
 import com.daryeou.app.feature.deepmedihome.component.CameraPreview
@@ -157,12 +159,13 @@ internal fun DeepmediHomeScreen(
                     .fillMaxWidth(0.8f),
                 lensFacing = lensFacing,
                 imageCapture = imageCapture,
-                enableCapture = enableCapture,
+                isShowPreview = !enableCapture,
                 onImageCaptured = onImageCaptured,
                 onCaptureFailed = {
                     showMessage(context.getString(R.string.capture_failed_message))
                 },
                 showCheckSymbol = showCheckSymbol,
+                showMessage = showMessage,
             )
             Spacer(modifier = Modifier.weight(0.4f))
             Image(
@@ -181,14 +184,25 @@ internal fun DeepmediHomeScreen(
 @Composable
 private fun DeepmediHomePreviewSection(
     modifier: Modifier = Modifier,
-    enableCapture: Boolean,
+    isShowPreview: Boolean,
     imageCapture: ImageCapture,
     lensFacing: Int,
     showCheckSymbol: Boolean,
     onImageCaptured: (Uri) -> Unit,
     onCaptureFailed: (ImageCaptureException) -> Unit,
+    showMessage: (String) -> Unit,
 ) {
     val context = LocalContext.current
+
+    var previewUri by remember { mutableStateOf<Uri?>(null) }
+
+    val onImageCapturedCallback = { uri: Uri ->
+        previewUri = uri
+        onImageCaptured(uri)
+    }
+    val onImageFailedCallback = { _: ImageCaptureException ->
+        showMessage(context.getString(R.string.capture_failed_message))
+    }
 
     Column(
         modifier = modifier,
@@ -206,11 +220,19 @@ private fun DeepmediHomePreviewSection(
             CameraPreview(
                 modifier = Modifier
                     .fillMaxSize(),
-                cameraBind = enableCapture,
                 imageCapture = imageCapture,
                 lensFacing = lensFacing,
             )
             Spacer(modifier = Modifier.height(24.dp))
+            if (isShowPreview) {
+                Image(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    painter = rememberAsyncImagePainter(previewUri),
+                    contentScale = ContentScale.Crop,
+                    contentDescription = "Captured Image",
+                )
+            }
             if (showCheckSymbol) {
                 Image(
                     modifier = Modifier
@@ -233,11 +255,11 @@ private fun DeepmediHomePreviewSection(
                     context = context,
                     imageCapture = imageCapture,
                     lensFacing = lensFacing,
-                    onImageCaptured = onImageCaptured,
-                    onCaptureFailed = onCaptureFailed,
+                    onImageCaptured = onImageCapturedCallback,
+                    onCaptureFailed = onImageFailedCallback,
                 )
             },
-            isEnable = enableCapture,
+            isEnable = !isShowPreview,
         )
     }
 }
