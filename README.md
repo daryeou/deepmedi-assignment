@@ -1,4 +1,5 @@
 # 딥메디 안드로이드 과제
+https://github.com/daryeou/deepmedi-assignment
 
 ![banner](screenshots/preview.png)<br>
 
