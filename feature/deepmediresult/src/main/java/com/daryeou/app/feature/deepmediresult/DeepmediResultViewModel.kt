@@ -32,9 +32,10 @@ class DeepmediResultViewModel @Inject constructor(
                         HealthResultUiState.ERROR
                     }
                 }
-            }.stateIn(
+            }
+            .stateIn(
                 scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(),
+                started = SharingStarted.Lazily,
                 initialValue = HealthResultUiState.LOADING
             )
 
